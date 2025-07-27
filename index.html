@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C File Handling Practice (Questions Only)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- 
+        Chosen Palette: Cool Neutral (Slate, Sky)
+        Application Structure Plan: A two-panel, single-page application. The left panel serves as a navigation menu, listing all questions. Clicking a question dynamically updates the right content panel with the question's details. This version is simplified to only show questions.
+        Visualization & Content Choices: The core content (questions) is presented in a structured text format. The primary interaction is navigation clicks. This design provides a clean, focused view of the problems to be solved.
+        CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .fira-code {
+            font-family: 'Fira Code', monospace;
+        }
+        .nav-button[aria-current="true"] {
+            background-color: #0ea5e9; /* sky-500 */
+            color: white;
+            font-weight: 600;
+        }
+        .nav-button:not([aria-current="true"]):hover {
+            background-color: #bae6fd; /* sky-200 */
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="min-h-screen flex flex-row">
+        <!-- Left Navigation Panel -->
+        <aside id="navigation-panel" class="w-1/3 max-w-md bg-white border-r border-slate-200 p-4 lg:p-6 flex flex-col">
+            <header class="mb-6">
+                <h1 class="text-2xl font-bold text-slate-900">C File Handling</h1>
+                <p class="text-sm text-slate-600 mt-1">Select a question to view its details.</p>
+            </header>
+            <nav id="question-nav" class="flex-grow space-y-2 overflow-y-auto">
+                <!-- Navigation buttons will be injected here by JS -->
+            </nav>
+        </aside>
+
+        <!-- Right Content Panel -->
+        <main id="content-panel" class="w-2/3 p-4 md:p-8 lg:p-12 overflow-y-auto">
+            <div id="welcome-message" class="flex flex-col items-center justify-center h-full text-center">
+                 <div class="bg-sky-100 text-sky-800 p-8 rounded-2xl max-w-lg">
+                    <h2 class="text-3xl font-bold mb-2">Welcome!</h2>
+                    <p class="text-lg">Select a question from the list on the left to get started.</p>
+                </div>
+            </div>
+            <div id="question-content" class="hidden">
+                <h2 id="question-title" class="text-3xl font-bold text-slate-900 mb-4"></h2>
+                <div id="question-body" class="prose prose-lg max-w-none text-slate-700 mb-8"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        if (typeof window.cFileAppInitialized === 'undefined') {
+            window.cFileAppInitialized = true;
+
+            const questionsData = [
+                {
+                    title: "Write to a File 📝",
+                    question: "Write a C program to create a file named `output.txt` and write the string \"Hello, World!\" into it.",
+                },
+                {
+                    title: "Read from a File 📖",
+                    question: "Write a C program to open an existing file named `input.txt`, read its content character by character, and display it on the console.",
+                },
+                {
+                    title: "Copy a File 📄",
+                    question: "Write a C program that copies the content of one file (`source.txt`) to another file (`destination.txt`).",
+                },
+                {
+                    title: "Count Characters 🧮",
+                    question: "Write a C program to count the number of characters in a file named `data.txt`.",
+                },
+                {
+                    title: "Append to a File ➕",
+                    question: "Write a C program to open `log.txt` in append mode and add a new line of text to the end of the file.",
+                },
+                {
+                    title: "Read a File Line by Line 📜",
+                    question: "Write a C program to read a file named `story.txt` and display its contents line by line on the console.",
+                },
+                {
+                    title: "Find File Size 💾",
+                    question: "Write a C program to determine the size of a file named `image.bin` in bytes without reading its entire content.",
+                },
+                {
+                    title: "Store Employee Data 👨‍💼",
+                    question: "Write a C program to store employee details (ID, Name, Salary) in a text file `employees.txt` using `fprintf()`.",
+                },
+                {
+                    title: "Read Structured Data 📊",
+                    question: "Write a C program to read the structured employee data from `employees.txt` (created in the previous question) using `fscanf()` and display it.",
+                },
+                {
+                    title: "Check if File Exists ✅",
+                    question: "Write a C program that checks if a file named `config.ini` exists. The program should print \"File exists\" or \"File does not exist\".",
+                }
+            ];
+
+            const navContainer = document.getElementById('question-nav');
+            const welcomeMessage = document.getElementById('welcome-message');
+            const questionContent = document.getElementById('question-content');
+            const questionTitle = document.getElementById('question-title');
+            const questionBody = document.getElementById('question-body');
+
+            function displayQuestion(index) {
+                if (index < 0 || index >= questionsData.length) return;
+
+                const question = questionsData[index];
+
+                welcomeMessage.classList.add('hidden');
+                questionContent.classList.remove('hidden');
+
+                questionTitle.textContent = question.title;
+                questionBody.innerHTML = question.question.replace(/`([^`]+)`/g, '<code class="fira-code bg-sky-100 text-sky-800 rounded px-1 py-0.5">\$1</code>');
+                
+                document.querySelectorAll('.nav-button').forEach((btn, i) => {
+                    btn.setAttribute('aria-current', i === index);
+                });
+            }
+
+            questionsData.forEach((question, index) => {
+                const button = document.createElement('button');
+                button.className = 'nav-button w-full text-left p-3 rounded-md transition-colors duration-200';
+                button.textContent = `${index + 1}. ${question.title}`;
+                button.setAttribute('aria-current', 'false');
+                button.addEventListener('click', () => displayQuestion(index));
+                navContainer.appendChild(button);
+            });
+        }
+    </script>
+</body>
+</html>

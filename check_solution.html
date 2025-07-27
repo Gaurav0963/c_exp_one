@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C File Handling Practice (With Solutions)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- 
+        Chosen Palette: Cool Neutral (Slate, Sky)
+        Application Structure Plan: A two-panel, single-page application. The left panel serves as a navigation menu, listing all questions. Clicking a question dynamically updates the right content panel with the question's details and a solution that can be revealed on demand.
+        Visualization & Content Choices: The core content (questions/solutions) is presented in a structured text format. The primary interactions are navigation clicks and show/hide toggles for solutions, implemented with vanilla JS. Code is displayed in a formatted <pre><code> block for readability. A "Copy Code" button enhances usability.
+        CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .fira-code {
+            font-family: 'Fira Code', monospace;
+        }
+        .nav-button[aria-current="true"] {
+            background-color: #0ea5e9; /* sky-500 */
+            color: white;
+            font-weight: 600;
+        }
+        .nav-button:not([aria-current="true"]):hover {
+            background-color: #bae6fd; /* sky-200 */
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="min-h-screen flex flex-row">
+        <!-- Left Navigation Panel -->
+        <aside id="navigation-panel" class="w-1/3 max-w-md bg-white border-r border-slate-200 p-4 lg:p-6 flex flex-col">
+            <header class="mb-6">
+                <h1 class="text-2xl font-bold text-slate-900">C File Handling</h1>
+                <p class="text-sm text-slate-600 mt-1">Select a question to view its details and solution.</p>
+            </header>
+            <nav id="question-nav" class="flex-grow space-y-2 overflow-y-auto">
+                <!-- Navigation buttons will be injected here by JS -->
+            </nav>
+        </aside>
+
+        <!-- Right Content Panel -->
+        <main id="content-panel" class="w-2/3 p-4 md:p-8 lg:p-12 overflow-y-auto">
+            <div id="welcome-message" class="flex flex-col items-center justify-center h-full text-center">
+                 <div class="bg-sky-100 text-sky-800 p-8 rounded-2xl max-w-lg">
+                    <h2 class="text-3xl font-bold mb-2">Welcome!</h2>
+                    <p class="text-lg">Select a question from the list on the left to get started. Each question comes with a solution you can reveal when you're ready.</p>
+                </div>
+            </div>
+            <div id="question-content" class="hidden">
+                <h2 id="question-title" class="text-3xl font-bold text-slate-900 mb-4"></h2>
+                <div id="question-body" class="prose prose-lg max-w-none text-slate-700 mb-8"></div>
+                
+                <div class="border-t border-slate-200 pt-6">
+                     <button id="toggle-solution-btn" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-sky-500 hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-transform transform hover:scale-105">
+                        Show Solution
+                    </button>
+                    <div id="solution-container" class="mt-6 hidden">
+                        <div class="bg-slate-100 rounded-lg overflow-hidden">
+                            <div class="flex justify-between items-center p-3 bg-slate-200 border-b border-slate-300">
+                                <h3 class="font-semibold text-slate-700">Solution Code</h3>
+                                <button id="copy-code-btn" class="px-3 py-1 text-sm font-medium text-slate-600 bg-white rounded-md border border-slate-300 hover:bg-slate-50">
+                                    Copy Code
+                                </button>
+                            </div>
+                            <pre class="p-4 text-sm overflow-x-auto fira-code"><code id="solution-code"></code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        if (typeof window.cFileSolutionsAppInitialized === 'undefined') {
+            window.cFileSolutionsAppInitialized = true;
+
+            const questionsData = [
+                {
+                    title: "Write to a File 📝",
+                    question: "Write a C program to create a file named `output.txt` and write the string \"Hello, World!\" into it.",
+                    solution: `#include <stdio.h>
+
+int main() {
+    FILE *file_pointer;
+    file_pointer = fopen("output.txt", "w");
+
+    if (file_pointer == NULL) {
+        printf("Error opening file!\\n");
+        return 1;
+    }
+
+    fprintf(file_pointer, "Hello, World!\\n");
+    printf("Successfully wrote to output.txt\\n");
+
+    fclose(file_pointer);
+    return 0;
+}`
+                },
+                {
+                    title: "Read from a File 📖",
+                    question: "Write a C program to open an existing file named `input.txt`, read its content character by character, and display it on the console.",
+                    solution: `#include <stdio.h>
+
+int main() {
+    FILE *file_pointer;
+    char ch;
+
+    // First, create a dummy input.txt file to read
+    file_pointer = fopen("input.txt", "w");
+    if(file_pointer != NULL) {
+        fprintf(file_pointer, "This is the content of input.txt.");
+        fclose(file_pointer);
+    }
+
+    // Now, open for reading
+    file_pointer = fopen("input.txt", "r");
+    if (file_pointer == NULL) {
+        printf("Error: Could not open input.txt\\n");
+        return 1;
+    }
+
+    printf("Content of input.txt:\\n");
+    while ((ch = fgetc(file_pointer)) != EOF) {
+        printf("%c", ch);
+    }
+    printf("\\n");
+
+    fclose(file_pointer);
+    return 0;
+}`
+                },
+                {
+                    title: "Copy a File 📄",
+                    question: "Write a C program that copies the content of one file (`source.txt`) to another file (`destination.txt`).",
+                    solution: `#include <stdio.h>
+#include <stdlib.h> // For exit()
+
+int main() {
+    FILE *source_file, *dest_file;
+    char ch;
+
+    // Create a dummy source file
+    source_file = fopen("source.txt", "w");
+    if(source_file != NULL) {
+        fprintf(source_file, "This is the source file for copying.");
+        fclose(source_file);
+    }
+
+    source_file = fopen("source.txt", "r");
+    if (source_file == NULL) {
+        printf("Error opening source.txt\\n");
+        exit(1);
+    }
+
+    dest_file = fopen("destination.txt", "w");
+    if (dest_file == NULL) {
+        fclose(source_file);
+        printf("Error opening destination.txt\\n");
+        exit(1);
+    }
+
+    while ((ch = fgetc(source_file)) != EOF) {
+        fputc(ch, dest_file);
+    }
+
+    printf("File copied successfully.\\n");
+
+    fclose(source_file);
+    fclose(dest_file);
+    return 0;
+}`
+                },
+                {
+                    title: "Count Characters 🧮",
+                    question: "Write a C program to count the number of characters in a file named `data.txt`.",
+                    solution: `#include <stdio.h>
+
+int main() {
+    FILE *fp;
+    int count = 0;
+    
+    // Create a dummy data file
+    fp = fopen("data.txt", "w");
+    if(fp != NULL) {
+        fprintf(fp, "Count these characters.");
+        fclose(fp);
+    }
+
+    fp = fopen("data.txt", "r");
+    if (fp == NULL) {
+        printf("Could not open data.txt\\n");
+        return 1;
+    }
+
+    // fgetc increments the file pointer
+    while (fgetc(fp) != EOF) {
+        count++;
+    }
+
+    fclose(fp);
+    printf("The number of characters in data.txt is: %d\\n", count);
+
+    return 0;
+}`
+                },
+                {
+                    title: "Append to a File ➕",
+                    question: "Write a C program to open `log.txt` in append mode and add a new line of text to the end of the file.",
+                    solution: `#include <stdio.h>
+
+int main() {
+    FILE *fp;
+
+    fp = fopen("log.txt", "a"); // 'a' for append mode
+    if (fp == NULL) {
+        printf("Could not open log.txt\\n");
+        return 1;
+    }
+
+    fprintf(fp, "New log entry added.\\n");
+    
+    printf("Appended new line to log.txt\\n");
+
+    fclose(fp);
+    return 0;
+}`
+                },
+                {
+                    title: "Read a File Line by Line 📜",
+                    question: "Write a C program to read a file named `story.txt` and display its contents line by line on the console.",
+                    solution: `#include <stdio.h>
+
+int main() {
+    FILE *fp;
+    char buffer[255]; // A buffer to hold one line
+
+    // Create a dummy story file
+    fp = fopen("story.txt", "w");
+    if(fp != NULL) {
+        fprintf(fp, "Once upon a time...\\n");
+        fprintf(fp, "There was a C program.\\n");
+        fprintf(fp, "The end.\\n");
+        fclose(fp);
+    }
+
+    fp = fopen("story.txt", "r");
+    if (fp == NULL) {
+        printf("Could not open story.txt\\n");
+        return 1;
+    }
+
+    printf("Contents of story.txt:\\n");
+    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+        printf("%s", buffer);
+    }
+
+    fclose(fp);
+    return 0;
+}`
+                },
+                {
+                    title: "Find File Size 💾",
+                    question: "Write a C program to determine the size of a file named `image.bin` in bytes without reading its entire content.",
+                    solution: `#include <stdio.h>
+
+int main() {
+    FILE *fp;
+    long size;
+
+    // Create a dummy binary file
+    fp = fopen("image.bin", "wb");
+    if(fp != NULL) {
+        char data[] = {0x01, 0x02, 0x03, 0x04, 0x05};
+        fwrite(data, sizeof(char), sizeof(data), fp);
+        fclose(fp);
+    }
+
+    fp = fopen("image.bin", "r");
+    if (fp == NULL) {
+        printf("Could not open image.bin\\n");
+        return 1;
+    }
+
+    fseek(fp, 0, SEEK_END); // Go to the end of the file
+    size = ftell(fp);      // Get the current position (which is the size)
+    fclose(fp);
+
+    printf("The size of image.bin is %ld bytes.\\n", size);
+
+    return 0;
+}`
+                },
+                {
+                    title: "Store Employee Data 👨‍💼",
+                    question: "Write a C program to store employee details (ID, Name, Salary) in a text file `employees.txt` using `fprintf()`.",
+                    solution: `#include <stdio.h>
+
+int main() {
+    FILE *fp;
+    int id = 101;
+    char name[] = "John Doe";
+    float salary = 55000.50;
+
+    fp = fopen("employees.txt", "w");
+    if (fp == NULL) {
+        printf("Could not open employees.txt\\n");
+        return 1;
+    }
+
+    fprintf(fp, "%d %s %.2f\\n", id, name, salary);
+    
+    printf("Employee data written to employees.txt\\n");
+
+    fclose(fp);
+    return 0;
+}`
+                },
+                {
+                    title: "Read Structured Data 📊",
+                    question: "Write a C program to read the structured employee data from `employees.txt` (created in the previous question) using `fscanf()` and display it.",
+                    solution: `#include <stdio.h>
+
+int main() {
+    FILE *fp;
+    int id;
+    char name[50];
+    float salary;
+
+    fp = fopen("employees.txt", "r");
+    if (fp == NULL) {
+        printf("Could not open employees.txt\\n");
+        return 1;
+    }
+
+    // Note: fscanf stops reading a string at the first whitespace.
+    // This example works because "John Doe" was written without a space.
+    // For names with spaces, fgets and parsing are better.
+    fscanf(fp, "%d %s %f", &id, name, &salary);
+    
+    printf("Read from file:\\n");
+    printf("ID: %d\\nName: %s\\nSalary: %.2f\\n", id, name, salary);
+
+    fclose(fp);
+    return 0;
+}`
+                },
+                {
+                    title: "Check if File Exists ✅",
+                    question: "Write a C program that checks if a file named `config.ini` exists. The program should print \"File exists\" or \"File does not exist\".",
+                    solution: `#include <stdio.h>
+
+int main() {
+    FILE *fp;
+
+    // Attempt to open the file for reading
+    fp = fopen("config.ini", "r");
+
+    if (fp != NULL) {
+        // If fopen succeeds, the file exists.
+        printf("File 'config.ini' exists.\\n");
+        fclose(fp); // Always close the file
+    } else {
+        // If fopen returns NULL, the file does not exist or cannot be opened.
+        printf("File 'config.ini' does not exist.\\n");
+    }
+
+    return 0;
+}`
+                }
+            ];
+
+            const navContainer = document.getElementById('question-nav');
+            const welcomeMessage = document.getElementById('welcome-message');
+            const questionContent = document.getElementById('question-content');
+            const questionTitle = document.getElementById('question-title');
+            const questionBody = document.getElementById('question-body');
+            const toggleSolutionBtn = document.getElementById('toggle-solution-btn');
+            const solutionContainer = document.getElementById('solution-container');
+            const solutionCode = document.getElementById('solution-code');
+            const copyCodeBtn = document.getElementById('copy-code-btn');
+
+            function displayQuestion(index) {
+                if (index < 0 || index >= questionsData.length) return;
+
+                const question = questionsData[index];
+
+                welcomeMessage.classList.add('hidden');
+                questionContent.classList.remove('hidden');
+
+                questionTitle.textContent = question.title;
+                questionBody.innerHTML = question.question.replace(/`([^`]+)`/g, '<code class="fira-code bg-sky-100 text-sky-800 rounded px-1 py-0.5">\$1</code>');
+                solutionCode.textContent = question.solution;
+                
+                solutionContainer.classList.add('hidden');
+                toggleSolutionBtn.textContent = 'Show Solution';
+
+                document.querySelectorAll('.nav-button').forEach((btn, i) => {
+                    btn.setAttribute('aria-current', i === index);
+                });
+            }
+
+            toggleSolutionBtn.addEventListener('click', () => {
+                const isHidden = solutionContainer.classList.toggle('hidden');
+                toggleSolutionBtn.textContent = isHidden ? 'Show Solution' : 'Hide Solution';
+            });
+
+            copyCodeBtn.addEventListener('click', () => {
+                const codeToCopy = solutionCode.textContent;
+                const tempTextArea = document.createElement('textarea');
+                tempTextArea.value = codeToCopy;
+                document.body.appendChild(tempTextArea);
+                tempTextArea.select();
+                try {
+                    document.execCommand('copy');
+                    copyCodeBtn.textContent = 'Copied!';
+                    setTimeout(() => { copyCodeBtn.textContent = 'Copy Code'; }, 2000);
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                }
+                document.body.removeChild(tempTextArea);
+            });
+
+            questionsData.forEach((question, index) => {
+                const button = document.createElement('button');
+                button.className = 'nav-button w-full text-left p-3 rounded-md transition-colors duration-200';
+                button.textContent = `${index + 1}. ${question.title}`;
+                button.setAttribute('aria-current', 'false');
+                button.addEventListener('click', () => displayQuestion(index));
+                navContainer.appendChild(button);
+            });
+        }
+    </script>
+</body>
+</html>
